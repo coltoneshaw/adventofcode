@@ -1,11 +1,6 @@
 import path from 'path';
 import { syncReadFile } from '../helpers/file';
 
-// 1. read everything from the file
-// 2. split it into sub arrays based on the spaces
-// 3. sum the value in the sub array
-// 4. find the highest value
-
 const splitArrayBySpaces = (arr: string[]) => {
   const splitArray: string[][] = [];
   let currentIndex = 0;
@@ -36,16 +31,17 @@ const sumArray = (arr: string[][]) => arr.map((foodItems) => {
   return sum;
 });
 
-const sortArray = (arr: number[]) => arr.sort((a, b) => b - a);
+const sortArrayDesc = (arr: number[]) => arr.sort((a, b) => b - a);
 
 const dayOne = () => {
   const calories = syncReadFile(path.join(__dirname, 'input.txt'));
   const splitArray = splitArrayBySpaces(calories);
   const combinedCalories = sumArray(splitArray);
-  const sorted = sortArray(combinedCalories);
+  const sorted = sortArrayDesc(combinedCalories);
 
   console.log(`
-    The answer to day one is: ${sorted[0]}
+    The answer to Day One Part One is: ${sorted[0]}
+    The answer to Day One Part Two is: ${sorted[0] + sorted[1] + sorted[2]}
   `);
 };
 
