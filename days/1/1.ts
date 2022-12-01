@@ -43,6 +43,13 @@ const dayOne = () => {
     The answer to Day One Part One is: ${sorted[0]}
     The answer to Day One Part Two is: ${sorted[0] + sorted[1] + sorted[2]}
   `);
+
+  return {
+    partOne: sorted[0],
+    partTwo: sorted[0] + sorted[1] + sorted[2],
+  };
 };
 
-dayOne();
+export {
+  dayOne,
+};

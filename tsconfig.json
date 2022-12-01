@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "rootDir": "./days",
+    "rootDir": "days",
     "outDir": "dist",
     "module": "commonjs",
     "target": "es5",
@@ -19,6 +19,10 @@
     "strict":false,
     "jsx": "react-jsx",
     "jsxImportSource": "@emotion/react",
+    "types": [
+      "node",
+			"jest"
+		]
   },
   "include": ["./days", "@types"],
   "exclude": ["node_modules", "lib"]

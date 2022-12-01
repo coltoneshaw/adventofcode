@@ -6,10 +6,19 @@
   "author": "coltoneshaw <colton@theshaw.group>",
   "license": "MIT",
   "scripts": {
-    "testDay": "npx ts-node"
+    "runDay": "npx ts-node",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest"
   },
-  "dependencies": {
+  "devDependencies": {
+    "@types/jest": "^29.2.3",
+    "eslint-plugin-jest": "^27.1.6",
+    "jest": "^29.3.1",
+    "jest-environment-jsdom": "^29.3.1",
+    "jest-environment-node": "^29.3.1",
+    "ts-jest": "^29.0.3",
     "@types/node": "18.7.19",
+    "@typescript-eslint/eslint-plugin": "^5.38.0",
+    "@typescript-eslint/parser": "^5.38.0",
     "eslint": "8.23.1",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^17.0.0",
@@ -17,10 +26,6 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-import-access": "^1.0.1",
     "eslint-plugin-jsx-a11y": "^6.6.1",
-    "eslint-plugin-react": "^7.31.8",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "@typescript-eslint/eslint-plugin": "^5.38.0",
-    "@typescript-eslint/parser": "^5.38.0",
     "typescript": "4.8.3"
   }
 }

@@ -4,11 +4,10 @@
     "es2021": true
   },
   "extends": [
-    "plugin:react/recommended",
     "airbnb",
     "airbnb-typescript",
     "eslint:recommended",
-    "plugin:react/jsx-runtime"
+    "plugin:jest/recommended"
   ],
   "ignorePatterns": ["**/*.js"],
   "parser": "@typescript-eslint/parser",
@@ -21,12 +20,10 @@
     "project": "./tsconfig.json"
   },
   "plugins": [
-    "react",
-    "@typescript-eslint"
+    "@typescript-eslint",
+    "jest"
     ],
   "rules": {
-    "react/no-unknown-property": ["error", { "ignore": ["css"] }],
-    "react/require-default-props": "off",
     "import/prefer-default-export": "off",
     "no-param-reassign": [
       "error",
@@ -47,23 +44,6 @@
       {
         "tsx": "never",
         "json": "always"
-      }
-    ],
-    "react/jsx-filename-extension": [
-      1,
-      {
-        "extensions": [
-          ".js",
-          ".jsx",
-          ".tsx"
-        ]
-      }
-    ],
-    "react/function-component-definition": [
-      "error",
-      {
-        "namedComponents": "arrow-function",
-        "unnamedComponents": "arrow-function"
       }
     ]
   }
