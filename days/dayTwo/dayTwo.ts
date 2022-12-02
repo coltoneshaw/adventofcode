@@ -13,35 +13,40 @@ import { syncReadFile } from '../helpers/file';
 // 3 Draw
 // 6 Win
 
+const win = 6;
+const draw = 3;
+const lose = 0;
+const paper = 2;
+const rock = 1;
+const scissors = 3;
+
 const dayTwoPartOne = () => {
   const scoreSheet = syncReadFile(path.join(__dirname, 'input.txt'));
   const roundScores: number[] = [];
 
-  const opponentWinKey = {
-    A: 'Z',
-    B: 'X',
-    C: 'Y',
+  const endScoreKey = {
+    // rock
+    A: {
+      Z: scissors + lose,
+      Y: paper + win,
+      X: rock + draw,
+    },
+    // Paper
+    B: {
+      Z: scissors + win,
+      Y: paper + draw,
+      X: rock + lose,
+    },
+    // Scissors
+    C: {
+      Z: scissors + draw,
+      Y: paper + lose,
+      X: rock + win,
+    },
   };
-
-  const meWinKey = {
-    X: 'C',
-    Y: 'A',
-    Z: 'B',
-  };
-
   scoreSheet.forEach((score) => {
-    let roundScore = 0;
     const [opponent, me] = score.split(' ');
-    const oppWon = opponentWinKey[opponent] === me;
-    const meWon = meWinKey[me] === opponent;
-
-    if (meWon) roundScore += 6;
-    if (me === 'X') roundScore += 1;
-    if (me === 'Y') roundScore += 2;
-    if (me === 'Z') roundScore += 3;
-    if (!oppWon && !meWon) roundScore += 3;
-
-    roundScores.push(roundScore);
+    roundScores.push(endScoreKey[opponent][me]);
   });
 
   const answer = roundScores.reduce((a, b) => a + b, 0);
@@ -60,35 +65,28 @@ const dayTwoPartTwo = () => {
   const key = {
     // Rock
     A: {
-      Z: 'paper',
-      X: 'scissors',
-      Y: 'rock',
+      Z: paper + win,
+      X: scissors + lose,
+      Y: rock + draw,
     },
     // Paper
     B: {
-      Z: 'scissors',
-      X: 'rock',
-      Y: 'paper',
+      Z: scissors + win,
+      X: rock + lose,
+      Y: paper + draw,
     },
     // Scissors
     C: {
-      Z: 'rock',
-      X: 'paper',
-      Y: 'scissors',
+      Z: rock + win,
+      X: paper + lose,
+      Y: scissors + draw,
     },
   };
 
   scoreSheet.forEach((score) => {
-    let roundScore = 0;
     const [opponent, ending] = score.split(' ');
-    if (ending === 'Y') roundScore += 3;
-    if (ending === 'Z') roundScore += 6;
-    const myPlay = key[opponent][ending];
-    if (myPlay === 'rock') roundScore += 1;
-    if (myPlay === 'paper') roundScore += 2;
-    if (myPlay === 'scissors') roundScore += 3;
 
-    roundScores.push(roundScore);
+    roundScores.push(key[opponent][ending]);
   });
 
   const answer = roundScores.reduce((a, b) => a + b, 0);
