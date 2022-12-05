@@ -22,12 +22,6 @@ const dayFourPartOne = () => {
       && Number(first[1]) >= Number(second[1])
     ) {
       duplicatePairs += 1;
-
-      // console.log({
-      //   log: 'triggered on one',
-      //   first,
-      //   second,
-      // });
       return;
     }
 
@@ -36,14 +30,6 @@ const dayFourPartOne = () => {
       && Number(second[1]) >= Number(first[1])
     ) {
       duplicatePairs += 1;
-      // console.log({
-      //   log: 'triggered on two',
-      //   first,
-      //   second,
-      //   secondOne: second[0],
-      //   firstOne: first[0],
-      //   2: second[0] <= first[0],
-      // });
     }
   });
 
