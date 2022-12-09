@@ -35,7 +35,7 @@ const dayFivePartOne = () => {
     .map((item) => +item);
 
   const unfilledInventory: string[][] = boxesStacks
-    .map(() => Array(boxesStacks.length - 1).fill(''))
+    .map(() => Array(boxesStacks.length).fill(''))
     .map((boxStack, boxPosition) => boxStack.map((_, itemPosition) => {
       const inventoryRow = reversedInventory[itemPosition];
       if (inventoryRow && inventoryRow.length >= boxPosition) {
@@ -101,7 +101,7 @@ const dayFivePartTwo = () => {
     .map((item) => +item);
 
   const unfilledInventory: string[][] = boxesStacks
-    .map(() => Array(boxesStacks.length - 1).fill(''))
+    .map(() => Array(boxesStacks.length).fill(''))
     .map((boxStack, boxPosition) => boxStack.map((_, itemPosition) => {
       const inventoryRow = reversedInventory[itemPosition];
       if (inventoryRow && inventoryRow.length >= boxPosition) {
@@ -127,6 +127,10 @@ const dayFivePartTwo = () => {
 
     const grabbedItems = fromStack.splice(fromStack.length - +amount, +amount);
     toStack.push(...grabbedItems);
+  });
+
+  console.log({
+    movedInventory,
   });
 
   return movedInventory.map((row) => row[row.length - 1]).join('');
