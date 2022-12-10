@@ -17,7 +17,7 @@ type MoveObject = {
   },
 };
 const adjustMoveArray = (
-  movementArray: MovementArray,
+  movementArray: MovementArray | TailArray,
   moveObject: MoveObject,
 ): MoveObject => {
   const newMoveObject: MoveObject = { ...moveObject };
@@ -36,6 +36,7 @@ const adjustMoveArray = (
       Array(movementArray[0].length).fill('.'),
     );
     newMoveObject.newPosition.row = 0;
+    newMoveObject.oldPosition.row = 1;
   }
 
   // moving down too many rows
@@ -56,6 +57,7 @@ const adjustMoveArray = (
       row.unshift('.');
     });
     newMoveObject.newPosition.col = 0;
+    newMoveObject.oldPosition.col = 1;
   }
 
   // moving right too many columns
@@ -70,79 +72,28 @@ const adjustMoveArray = (
 const getCurrentPositions = (movementArray: MovementArray) => {
   const headCurrentRow = movementArray.find((row) => row.includes('H'));
   if (!headCurrentRow) {
-    console.table(movementArray);
     throw Error('Unable to find the Head');
   }
   const tailCurrentRow = movementArray.find((row) => row.includes('T'));
+
+  const tailPosition = (tailCurrentRow) ? {
+    row: movementArray.indexOf(tailCurrentRow),
+    col: tailCurrentRow.indexOf('T'),
+  } : undefined;
 
   return {
     head: {
       row: movementArray.indexOf(headCurrentRow),
       col: headCurrentRow.indexOf('H'),
     },
-    tail: {
-      row: (tailCurrentRow) ? movementArray.indexOf(tailCurrentRow) : undefined,
-      col: (tailCurrentRow) ? tailCurrentRow.indexOf('T') : undefined,
-    },
+    tail: tailPosition,
   };
 };
-
-const headUpDownCheck = (
-  movementArray: MovementArray,
-  direction: 'U' | 'D',
-  amount: number,
-): MovementArray => {
-  console.log(`Adding ${amount} of rows ${direction}`);
-  const headCheck = movementArray.find((row) => row.includes('H'));
-  if (!headCheck) {
-    throw Error('Unable to find the head');
-  }
-
-  const headCheckRow = movementArray.indexOf(headCheck);
-
-  if (
-    direction === 'U'
-    && movementArray[headCheckRow - amount] === undefined) {
-    const newRows: MovementArray = Array.from(
-      { length: amount },
-      () => Array.from(
-        { length: movementArray[headCheckRow].length },
-        () => '.',
-      ),
-    );
-    return [
-      ...newRows,
-      ...movementArray,
-    ];
-  }
-
-  if (
-    direction === 'D' && movementArray[headCheckRow + amount] === undefined) {
-    const newRows: MovementArray = Array.from(
-      { length: amount },
-      () => Array.from(
-        { length: movementArray[headCheckRow].length },
-        () => '.',
-      ),
-    );
-
-    return [
-      ...movementArray,
-      ...newRows,
-    ];
-  }
-
-  return movementArray;
-};
-
-const emptycheck = (movementArray: MovementArray) => movementArray.map((row) => row.map((r) => {
-  if (r === undefined) return '.';
-  return r;
-}));
 
 const updateHeadPosition = (
   movementArray: MovementArray,
   { newPosition, oldPosition }: MoveObject,
+  tail :{ row: number, col: number } | undefined,
 ) => {
   // eslint-disable-next-line no-param-reassign
   if (newPosition.col < 0) {
@@ -150,225 +101,142 @@ const updateHeadPosition = (
   }
 
   movementArray[newPosition.row][newPosition.col] = 'H';
+  if (!tail) {
+    movementArray[oldPosition.row][oldPosition.col] = 'T';
+    return;
+  }
   movementArray[oldPosition.row][oldPosition.col] = '.';
+};
+
+// checks if the head is in range for the tail and if it needs to move or not.
+const checkHeadInRange = (movementArray: MovementArray, currentPositions: [number, number]) => {
+  const [row, col] = currentPositions;
+  const [up, down, left, right] = [row - 1, row + 1, col - 1, col + 1];
+  const diagnalPositions = [
+    [up, left],
+    [up, right],
+    [down, left],
+    [down, right],
+    [row, left],
+    [row, right],
+    [up, col],
+    [down, col],
+  ];
+  const diagnalMembers = diagnalPositions.filter((pos) => {
+    const [r, c] = pos;
+    if (movementArray[r] === undefined) return false;
+    if (movementArray[r][c] === undefined) return false;
+    return true;
+  }).map((pos) => {
+    const [r, c] = pos;
+    return movementArray[r][c];
+  });
+
+  return diagnalMembers.some((member) => member === 'H');
 };
 
 const updateTailPosition = (
   movementArray: MovementArray,
-  oldRow: number | undefined,
-  oldCol: number | undefined,
-  newRow: number,
-  newCol: number,
-  tailVisitedArray: TailArray,
+  direction: 'U' | 'D' | 'L' | 'R',
 ) => {
-  if (newCol < 0) {
-    throw Error('Col cannot be less than 0');
-  }
-  movementArray[newRow][newCol] = 'T';
-  if (tailVisitedArray[newRow] === undefined) {
-    tailVisitedArray[newRow] = Array.from({ length: movementArray[newRow].length || 10 }, () => '.');
+  // need to expand out the visited array
+
+  const { head, tail } = getCurrentPositions(movementArray);
+
+  // get current positions of everything
+  // if the tail position is undefined, we don't need to do anything
+  // check if the head is a diag member of the tail, if it is, we don't need to do anything
+
+  if (!tail) {
+    console.log('Tail and head are in same location currently');
+    return;
   }
 
-  if (tailVisitedArray[newRow][newCol] === undefined) {
-    tailVisitedArray[newRow][newCol] = '.';
+  let tailNewPosition = { ...tail };
+
+  // if the head and col are in different directions, they may be diag members
+  const headInRange = checkHeadInRange(movementArray, [tail.row, tail.col]);
+
+  if (headInRange) {
+    console.log('Head is in range of tail, not moving');
+    return;
   }
 
-  tailVisitedArray[newRow][newCol] = '#';
-  if (oldRow !== undefined && oldCol !== undefined) movementArray[oldRow][oldCol] = '.';
+  if (direction === 'U') {
+    tailNewPosition = {
+      row: head.row + 1,
+      col: head.col,
+    };
+  }
+
+  if (direction === 'D') {
+    tailNewPosition = {
+      row: head.row - 1,
+      col: head.col,
+    };
+  }
+
+  if (direction === 'L') {
+    tailNewPosition = {
+      row: head.row,
+      col: head.col + 1,
+    };
+  }
+
+  if (direction === 'R') {
+    tailNewPosition = {
+      row: head.row,
+      col: head.col - 1,
+    };
+  }
+
+  movementArray[tailNewPosition.row][tailNewPosition.col] = 'T';
+  movementArray[tail.row][tail.col] = '.';
 };
 
-type MovementFunction = {
-  amount: number;
-  movementArray: MovementArray;
-  tailVisitedArray: TailArray;
-};
-
-// Moving right is adjusting the column + 1
-const moveRight = ({
-  amount,
-  movementArray,
-  tailVisitedArray,
-}: MovementFunction) => {
-  for (let i = 0; i < amount; i += 1) {
-    movementArray = emptycheck(movementArray);
-    const current = getCurrentPositions(movementArray);
-    const headPositions = adjustMoveArray(movementArray, {
-      oldPosition: current.head,
-      newPosition: {
-        row: current.head.row,
-        col: current.head.col + 1,
-      },
-    });
-
-    updateHeadPosition(movementArray, headPositions);
-    updateTailPosition(movementArray);
-
-    // // check if the head and tail are on different rows right now and if it's the first move since the head has moved
-    // // this means it's most likely a diagnal partner.
-    // if (i === 0 && head.row !== tail.row) {
-    //   continue;
-    // }
-
-    // // this checks to see if they are on top of each other.
-    // if (head.row === tail.row && (head.col + 1) === tail.col) {
-    //   continue;
-    // }
-
-    // // if the tail is undefined, it's assumed the head is on top of the tail
-    // if (tail.col === undefined || tail.row === undefined) {
-    //   updateTailPosition(movementArray, tail.row, tail.col, head.row, head.col, tailVisitedArray);
-    //   continue;
-    // }
-    // updateTailPosition(movementArray, tail.row, tail.col, head.row, head.col, tailVisitedArray);
+const returnDirectionalPosition = (
+  direction: 'U' | 'D' | 'L' | 'R',
+  position: MoveObject['newPosition'],
+) => {
+  if (direction === 'U') {
+    return { row: position.row - 1, col: position.col };
   }
-};
-
-// Moving right is adjusting the column - 1
-const moveLeft = ({
-  amount,
-  movementArray,
-  tailVisitedArray,
-}: MovementFunction) => {
-  for (let i = 0; i < amount; i += 1) {
-    const { head, tail } = getCurrentPositions(movementArray);
-    let newHeadCol = head.col - 1;
-    if (newHeadCol < 0) {
-      movementArray[head.row].unshift('.');
-      newHeadCol = 0;
-    }
-    updateHeadPosition(movementArray, head.row, head.col, head.row, newHeadCol);
-
-    // this checks to see if they are on top of each other.
-    if (head.row === tail.row && (newHeadCol) === tail.col) {
-      continue;
-    }
-
-    // check if the head and tail are on different rows right now and if it's the first move since the head has moved
-    // this means it's most likely a diagnal partner.
-    if (i === 0 && head.row !== tail.row) {
-      continue;
-    }
-    // if the tail is undefined, it's assumed the head is on top of the tail
-    if (tail.col === undefined || tail.row === undefined) {
-      updateTailPosition(movementArray, tail.row, tail.col, head.row, head.col, tailVisitedArray);
-      continue;
-    }
-    updateTailPosition(movementArray, tail.row, tail.col, head.row, head.col, tailVisitedArray);
+  if (direction === 'D') {
+    return { row: position.row + 1, col: position.col };
   }
-};
-
-// Moving up is reducing the row index by 1
-const moveUp = ({
-  amount,
-  movementArray,
-  tailVisitedArray,
-}: MovementFunction) => {
-  for (let i = 0; i < amount; i += 1) {
-    const { head, tail } = getCurrentPositions(movementArray);
-
-    if (head.row - 1 >= movementArray.length) {
-      movementArray.push(Array.from({
-        length: movementArray.map((a) => a.length)
-          .indexOf(Math.max(...movementArray.map((a) => a.length))),
-      }, () => '.'));
-    }
-
-    if (head.col > movementArray[head.row - 1].length) {
-      movementArray[head.row - 1].push('.');
-    }
-
-    updateHeadPosition(movementArray, head.row, head.col, head.row - 1, head.col);
-
-    if ((head.row - 1) === tail.row && head.col === tail.col) {
-      continue;
-    }
-
-    // if the tail is undefined, it's assumed the head is on top of the tail
-    if (tail.col === undefined || tail.row === undefined) {
-      updateTailPosition(movementArray, tail.col, tail.col, head.row, head.col, tailVisitedArray);
-      continue;
-    }
-
-    if (i > 0) {
-      // if it's the first move after we go up, we will go right where the head just left
-      if (i === 1) {
-        updateTailPosition(movementArray, tail.row, tail.col, head.row, head.col, tailVisitedArray);
-        continue;
-      }
-      updateTailPosition(movementArray, tail.row, tail.col, tail.row - 1, tail.col, tailVisitedArray);
-    }
+  if (direction === 'L') {
+    return { row: position.row, col: position.col - 1 };
   }
-};
-
-const moveDown = ({
-  amount, movementArray, tailVisitedArray,
-}: MovementFunction) => {
-  for (let i = 0; i < amount; i += 1) {
-    const { head, tail } = getCurrentPositions(movementArray);
-
-    if (head.row + 1 >= movementArray.length) {
-      movementArray.push(Array.from({
-        length: movementArray.map((a) => a.length)
-          .indexOf(Math.max(...movementArray.map((a) => a.length))),
-      }, () => '.'));
-    }
-
-    if (head.col > movementArray[head.row + 1].length) {
-      movementArray[head.row + 1].push('.');
-    }
-
-    updateHeadPosition(movementArray, head.row, head.col, head.row + 1, head.col);
-
-    if ((head.row + 1) === tail.row && head.col === tail.col) {
-      continue;
-    }
-
-    // if the tail is undefined, it's assumed the head is on top of the tail
-    if (tail.col === undefined || tail.row === undefined) {
-      updateTailPosition(movementArray, undefined, undefined, head.row, head.col, tailVisitedArray);
-      continue;
-    }
-
-    // if it goes up there will be the first up is diagonal and you leave it.
-    // the second up you go right behind the tail.
-    // i === 0 - this will be diagonal
-    if (i > 0) {
-      // if it's the first move after we go up, we will go right where the head just left
-      if (i === 1) {
-        updateTailPosition(movementArray, tail.row, tail.col, head.row, head.col, tailVisitedArray);
-        continue;
-      }
-      updateTailPosition(movementArray, tail.row, tail.col, tail.row + 1, tail.col, tailVisitedArray);
-    }
+  if (direction === 'R') {
+    return { row: position.row, col: position.col + 1 };
   }
+  throw Error('Invalid direction');
 };
-
 // must stay behind the head in the direction the head is going, diagnal, or on top of
 const dayNinePartOne = () => {
   const movements = syncReadFile(path.join(__dirname, 'input.txt'))
     .map((line) => line.split(' '))
-    .map(([direction, number]) => ({ direction, amount: +number }));
+    .map((
+      [direction, number],
+    ) => ({ direction, amount: +number } as { direction: 'U' | 'D' | 'L' | 'R', amount: number }));
 
-  let movementArray: MovementArray = [['H']];
+  const movementArray: MovementArray = [['H']];
   const tailVisitedArray: TailArray = [['.']];
 
   movements.forEach(({ amount, direction }, index) => {
     console.log({ amount, direction });
     console.table(movementArray);
 
-    if (direction === 'R') moveRight({ amount, movementArray, tailVisitedArray });
-
-    if (direction === 'L') moveLeft({ amount, movementArray, tailVisitedArray });
-
-    if (direction === 'U') {
-      movementArray = headUpDownCheck(movementArray, direction, amount);
-      moveUp({ amount, movementArray, tailVisitedArray });
+    for (let i = 0; i < amount; i += 1) {
+      const current = getCurrentPositions(movementArray);
+      const headPositions = adjustMoveArray(movementArray, {
+        oldPosition: current.head,
+        newPosition: returnDirectionalPosition(direction, current.head),
+      });
+      updateHeadPosition(movementArray, headPositions, current.tail);
+      updateTailPosition(movementArray, direction);
     }
 
-    if (direction === 'D') {
-      movementArray = headUpDownCheck(movementArray, direction, amount);
-      moveDown({ amount, movementArray, tailVisitedArray });
-    }
     if (movementArray.some((row) => row.includes(undefined))) {
       console.log({
         amount,
@@ -380,6 +248,7 @@ const dayNinePartOne = () => {
   });
 
   console.table(movementArray);
+  console.table(tailVisitedArray);
 
   // console.log({
   //   movementArray,
