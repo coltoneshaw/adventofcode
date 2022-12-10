@@ -1,6 +1,6 @@
 import { dayEightPartOne, dayEightPartTwo } from './day8';
 
-describe('Day Seven tests', () => {
+describe('Day Eight tests', () => {
   test('Part one', () => {
     expect(dayEightPartOne()).toBe(21);
   });
