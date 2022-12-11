@@ -156,6 +156,7 @@ const checkHeadInRange = (movementArray: MovementArray, currentPositions: [numbe
 const updateTailPosition = (
   movementArray: MovementArray,
   direction: 'U' | 'D' | 'L' | 'R',
+  tailVisited: TailArray,
 ) => {
   // need to expand out the visited array
 
@@ -167,6 +168,7 @@ const updateTailPosition = (
 
   if (!tail) {
     console.log('Tail and head are in same location currently');
+    tailVisited[head.row][head.col] = '#';
     return;
   }
 
@@ -209,6 +211,8 @@ const updateTailPosition = (
   }
 
   movementArray[tailNewPosition.row][tailNewPosition.col] = 'T';
+  tailVisited[tailNewPosition.row][tailNewPosition.col] = '#';
+  tailVisited[tail.row][tail.col] = '#';
   movementArray[tail.row][tail.col] = '.';
 };
 
@@ -242,6 +246,7 @@ const dayNinePartOne = () => {
   const tailVisitedArray: TailArray = [['.']];
 
   movements.forEach(({ amount, direction }, index) => {
+    console.log(`Iteration ${index} of ${movements.length} - ${direction} ${amount}`);
     for (let i = 0; i < amount; i += 1) {
       const current = getCurrentPositions(movementArray);
       const headPositions = adjustMoveArray(
@@ -253,7 +258,7 @@ const dayNinePartOne = () => {
         tailVisitedArray,
       );
       updateHeadPosition(movementArray, headPositions, current.tail);
-      updateTailPosition(movementArray, direction);
+      updateTailPosition(movementArray, direction, tailVisitedArray);
     }
 
     if (movementArray.some((row) => row.includes(undefined))) {
@@ -265,9 +270,6 @@ const dayNinePartOne = () => {
       throw Error('Array includes some undefined things');
     }
   });
-
-  console.table(movementArray);
-  console.table(tailVisitedArray);
 
   return tailVisitedArray.flat().filter((item) => item === '#').length;
 };
