@@ -8,6 +8,6 @@ describe('Day Nine tests', () => {
   // });
 
   test('Part two', () => {
-    expect(dayNinePartTwo()).toBe(36);
+    expect(dayNinePartTwo()).toBe(1);
   });
 });
