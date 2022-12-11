@@ -158,30 +158,41 @@ const updateHeadPosition = (
   }
 
   movementArray[newPosition.row][newPosition.col] = 'H';
-  // const priorElement = findElementPosition(movementArray, '1');
-  // if (!priorElement) {
-  //   // @ts-ignore
-  // movementArray[oldPosition.row][oldPosition.col] = '1';
-  //   return;
-  // }
+  const priorElement = findElementPosition(movementArray, '1');
+  if (!priorElement) {
+    movementArray[oldPosition.row][oldPosition.col] = '1';
+    return;
+  }
   movementArray[oldPosition.row][oldPosition.col] = '.';
 };
 
+type ElementObject = {
+  element: '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | 'T',
+  priorElement: '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | 'H',
+  nextElement: '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | 'T',
+};
 const updateElementPosition = (
   movementArray: MovementArray,
   direction: 'U' | 'D' | 'L' | 'R',
   // tailVisited: TailArray,
-  element: '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | 'T',
-  priorElement: '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | 'H',
-  nextElement: '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | 'T',
+  {
+    element,
+    priorElement,
+    nextElement,
+  } : ElementObject,
 ) => {
-  // need to expand out the visited array
-
-  // const { head, tail } = getCurrentPositions(movementArray);
-
   const position = findElementPosition(movementArray, element);
-
   const priorElementPosition = findElementPosition(movementArray, priorElement);
+
+  console.log({
+    element,
+    priorElement,
+    nextElement,
+    position,
+    priorElementPosition,
+  });
+
+  console.table(movementArray);
 
   if (!priorElementPosition) {
     console.log('prior element has not been placed yet');
@@ -194,11 +205,11 @@ const updateElementPosition = (
 
   if (!position) {
     console.log('Current element has not been placed yet');
-    // tailVisited[priorElementPosition.row][priorElementPosition.col] = '#';
+    // movementArray[priorElementPosition.row][priorElementPosition.col] = element;
     return;
   }
 
-  let tailNewPosition = { ...position };
+  let newPosition = { ...position };
 
   // if the head and col are in different directions, they may be diag members
   const headInRange = checkElementInRange(movementArray, [position.row, position.col], element);
@@ -209,49 +220,49 @@ const updateElementPosition = (
   }
 
   if (direction === 'U') {
-    tailNewPosition = {
+    newPosition = {
       row: priorElementPosition.row + 1,
       col: priorElementPosition.col,
     };
   }
 
   if (direction === 'D') {
-    tailNewPosition = {
+    newPosition = {
       row: priorElementPosition.row - 1,
       col: priorElementPosition.col,
     };
   }
 
   if (direction === 'L') {
-    tailNewPosition = {
+    newPosition = {
       row: priorElementPosition.row,
       col: priorElementPosition.col + 1,
     };
   }
 
   if (direction === 'R') {
-    tailNewPosition = {
+    newPosition = {
       row: priorElementPosition.row,
       col: priorElementPosition.col - 1,
     };
   }
 
-  movementArray[tailNewPosition.row][tailNewPosition.col] = 'T';
+  movementArray[newPosition.row][newPosition.col] = element;
   // tailVisited[tailNewPosition.row][tailNewPosition.col] = '#';
   // tailVisited[tail.row][tail.col] = '#';
-  movementArray[priorElementPosition.row][priorElementPosition.col] = '.';
+  // movementArray[priorElementPosition.row][priorElementPosition.col] = '.';
 
   // need to check the position of the next element and decide if it should be placed or not.
 
-  const nextElementPosition = findElementPosition(movementArray, nextElement);
-  console.log({
-    nextElementPosition,
-  });
+  // const nextElementPosition = findElementPosition(movementArray, nextElement);
+  // console.log({
+  //   nextElementPosition,
+  // });
 
-  if (!nextElementPosition) {
-    console.log('Next element has not been placed yet');
-    movementArray[priorElementPosition.row][priorElementPosition.col] = nextElement;
-  }
+  // if (!nextElementPosition) {
+  //   console.log('Next element has not been placed yet');
+  //   movementArray[priorElementPosition.row][priorElementPosition.col] = nextElement;
+  // }
 };
 
 const returnDirectionalPosition = (
@@ -302,17 +313,18 @@ const dayNinePartTwo = () => {
       );
       updateHeadPosition(movementArray, headPositions);
       for (let j = 1; j < 9; j += 1) {
-        console.table(movementArray);
-        const element = String(j) as '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | 'T';
+        // console.table(movementArray);
+        const element = (j === 8) ? 'T' : String(j) as '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | 'T';
         const priorElement = (j === 1) ? 'H' : String(j - 1) as '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | 'H';
-        const nextElement = (j === 8) ? 'T' : String(j + 1) as '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | 'T';
+        const nextElement = (j === 7) ? 'T' : String(j + 1) as '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | 'T';
         updateElementPosition(
           movementArray,
           direction,
-          // tailVisitedArray,
-          element,
-          priorElement,
-          nextElement,
+          {
+            element,
+            priorElement,
+            nextElement,
+          },
         );
       }
     }
