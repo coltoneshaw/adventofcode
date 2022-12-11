@@ -19,6 +19,7 @@ type MoveObject = {
 const adjustMoveArray = (
   movementArray: MovementArray | TailArray,
   moveObject: MoveObject,
+  tailArray: TailArray,
 ): MoveObject => {
   const newMoveObject: MoveObject = { ...moveObject };
 
@@ -35,6 +36,10 @@ const adjustMoveArray = (
     movementArray.unshift(
       Array(movementArray[0].length).fill('.'),
     );
+
+    tailArray.unshift(
+      Array(tailArray[0].length).fill('.'),
+    );
     newMoveObject.newPosition.row = 0;
     newMoveObject.oldPosition.row = 1;
   }
@@ -43,6 +48,10 @@ const adjustMoveArray = (
   if (moveObject.newPosition.row === movementArray.length) {
     movementArray.push(
       Array(movementArray[0].length).fill('.'),
+    );
+
+    tailArray.push(
+      Array(tailArray[0].length).fill('.'),
     );
   }
 
@@ -56,6 +65,11 @@ const adjustMoveArray = (
     movementArray.forEach((row) => {
       row.unshift('.');
     });
+
+    tailArray.forEach((row) => {
+      row.unshift('.');
+    });
+
     newMoveObject.newPosition.col = 0;
     newMoveObject.oldPosition.col = 1;
   }
@@ -63,6 +77,10 @@ const adjustMoveArray = (
   // moving right too many columns
   if (moveObject.newPosition.col === movementArray[0].length) {
     movementArray.forEach((row) => {
+      row.push('.');
+    });
+
+    tailArray.forEach((row) => {
       row.push('.');
     });
   }
@@ -224,15 +242,16 @@ const dayNinePartOne = () => {
   const tailVisitedArray: TailArray = [['.']];
 
   movements.forEach(({ amount, direction }, index) => {
-    console.log({ amount, direction });
-    console.table(movementArray);
-
     for (let i = 0; i < amount; i += 1) {
       const current = getCurrentPositions(movementArray);
-      const headPositions = adjustMoveArray(movementArray, {
-        oldPosition: current.head,
-        newPosition: returnDirectionalPosition(direction, current.head),
-      });
+      const headPositions = adjustMoveArray(
+        movementArray,
+        {
+          oldPosition: current.head,
+          newPosition: returnDirectionalPosition(direction, current.head),
+        },
+        tailVisitedArray,
+      );
       updateHeadPosition(movementArray, headPositions, current.tail);
       updateTailPosition(movementArray, direction);
     }
@@ -249,11 +268,6 @@ const dayNinePartOne = () => {
 
   console.table(movementArray);
   console.table(tailVisitedArray);
-
-  // console.log({
-  //   movementArray,
-  //   tailVisitedArray,
-  // });
 
   return tailVisitedArray.flat().filter((item) => item === '#').length;
 };
