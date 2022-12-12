@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-unused-vars */
 import path from 'path';
+import { findItem } from '../helpers/array';
 import { syncReadFile } from '../helpers/file';
 
 // Highest point is Z, lowest point is a
@@ -21,26 +22,6 @@ type Node = {
   weight: number
 };
 
-const findItem = (
-  inputArray: string[][],
-  item: 'S' | 'E',
-): Node => {
-  const row = inputArray.find((r) => r.includes(item));
-
-  if (!row) {
-    throw Error('Unable to find the item');
-  }
-  const position = {
-    y: inputArray.indexOf(row),
-    x: row.indexOf(item),
-  };
-
-  return {
-    ...position,
-    key: `${position.x},${position.y}`,
-    weight: 0,
-  };
-};
 const characters = 'abcdefghijklmnopqrstuvwxyzE'.split('');
 
 const checkNode = (
@@ -73,7 +54,6 @@ const checkNode = (
     || searchY >= inputArray.length
   ) {
     return {
-      valid: false,
       canMove: false,
       key: '',
     };
@@ -93,7 +73,6 @@ const checkNode = (
     weight: priorNode.weight + 1,
   };
   return {
-    valid: true,
     canMove: validMove,
     node,
   };
@@ -107,19 +86,19 @@ const findPaths = (
 
   // search up
   const up = checkNode(currentLocation, inputArray, 'up');
-  if (up.valid && up.canMove) possiblePaths.push(up.node as Node);
+  if (up.canMove) possiblePaths.push(up.node as Node);
 
   // search down
   const down = checkNode(currentLocation, inputArray, 'down');
-  if (down.valid && down.canMove) possiblePaths.push(down.node as Node);
+  if (down.canMove) possiblePaths.push(down.node as Node);
 
   // search left
   const left = checkNode(currentLocation, inputArray, 'left');
-  if (left.valid && left.canMove) possiblePaths.push(left.node as Node);
+  if (left.canMove) possiblePaths.push(left.node as Node);
 
   // search right
   const right = checkNode(currentLocation, inputArray, 'right');
-  if (right.valid && right.canMove) possiblePaths.push(right.node as Node);
+  if (right.canMove) possiblePaths.push(right.node as Node);
 
   return possiblePaths.sort((a, b) => a.weight - b.weight);
 };
@@ -129,13 +108,10 @@ const dayTwelve = () => {
     .map((line) => line.split(''));
 
   const traversed = new Set<string>();
-  const weights: number[] = [];
 
-  const current = findItem(input, 'S');
-  const queue = [current];
-  const endCoords = findItem(input, 'E');
-
-  // const shortestPath = 0;
+  const current: Node = findItem(input, 'S');
+  const queue: Node[] = [current];
+  const endCoords: Node = findItem(input, 'E');
 
   while (queue.length > 0) {
     // need to start from the front because these should have the lowest weight
@@ -145,15 +121,13 @@ const dayTwelve = () => {
       throw Error('Unable to find node');
     }
 
-    if (
-      currentNode.x === endCoords.x
-      && currentNode.y === endCoords.y
-    ) {
+    if (currentNode.key === endCoords.key) {
       return currentNode.weight;
     }
     const paths = findPaths(currentNode, input);
     paths.forEach((n) => {
       if (!traversed.has(n.key)) {
+        console.log('Adding node to queue: ', n);
         queue.push(n);
       }
     });
@@ -161,9 +135,7 @@ const dayTwelve = () => {
     traversed.add(currentNode.key);
   }
 
-  return weights.sort()[0];
-
-  // need to loop over
+  return undefined;
 };
 
 export {
