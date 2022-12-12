@@ -100,7 +100,7 @@ const findPaths = (
   const right = checkNode(currentLocation, inputArray, 'right');
   if (right.canMove) possiblePaths.push(right.node as Node);
 
-  return possiblePaths.sort((a, b) => a.weight - b.weight);
+  return possiblePaths;
 };
 
 const dayTwelve = () => {
@@ -113,6 +113,21 @@ const dayTwelve = () => {
   const queue: Node[] = [current];
   const endCoords: Node = findItem(input, 'E');
 
+  const addToQueue = (node: Node) => {
+    const alreadyVisited = traversed.has(node.key);
+    const inQueue = queue.find((q) => q.key === node.key);
+
+    // console.log({
+    //   node,
+    //   alreadyVisited,
+    //   inQueue,
+    // });
+
+    if (!alreadyVisited && !inQueue) {
+      queue.push(node);
+    }
+  };
+
   while (queue.length > 0) {
     // need to start from the front because these should have the lowest weight
     const currentNode = queue.shift();
@@ -120,24 +135,22 @@ const dayTwelve = () => {
     if (!currentNode) {
       throw Error('Unable to find node');
     }
+    traversed.add(currentNode.key);
 
     if (currentNode.key === endCoords.key) {
       return currentNode.weight;
     }
     const paths = findPaths(currentNode, input);
-    paths.forEach((n) => {
-      if (!traversed.has(n.key)) {
-        console.log('Adding node to queue: ', n);
-        queue.push(n);
-      }
-    });
 
-    traversed.add(currentNode.key);
+    if (paths.length !== 0) {
+      paths.forEach((n) => addToQueue(n));
+    }
   }
 
   return undefined;
 };
 
+// 427 is not the answer
 export {
   dayTwelve,
 };
