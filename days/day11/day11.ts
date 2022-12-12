@@ -3,9 +3,24 @@
 import path from 'path';
 import { syncReadFile } from '../helpers/file';
 
+const gcd = (a: number, b: number): number => {
+  // Greatest common divisor of 2 integers
+  if (!b) return b === 0 ? a : NaN;
+  return gcd(b, a % b);
+};
+const lcm = (a:number, b:number) => (a * b) / gcd(a, b);
+const lcmArray = (array: number[]) => {
+  // Least common multiple of a list of integers
+  let n = 1;
+  for (let i = 0; i < array.length; i += 1) { n = lcm(array[i], n); }
+  return n;
+};
+
 // @ts-ignore
 class Monkey {
   inventory: number[];
+
+  inspectionCount: number;
 
   operation: Function;
 
@@ -16,6 +31,8 @@ class Monkey {
 
   divisibleBy: number;
 
+  lcm: number;
+
   constructor(
     startingItems: number[],
     operation: string,
@@ -25,15 +42,29 @@ class Monkey {
       false: number;
     },
   ) {
+    // const splitOperation = operation.split('=')[1].trim().split(' ');
     this.inventory = startingItems;
+    // this.operation = new Function('old', `return BigInt${splitOperation[0]} ${splitOperation[1]} BigInt${splitOperation[2]}`);
+
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
     this.operation = new Function('old', `return ${operation.split('=')[1]}`);
+
     this.bored = bored;
     this.divisibleBy = divisibleBy;
+    this.inspectionCount = 0;
+    this.lcm = 0;
   }
 
   receiveItem(item: number) {
     this.inventory.push(item);
+  }
+
+  increaseInspectionCount() {
+    this.inspectionCount += 1;
+  }
+
+  setLcm(lcmSet: number) {
+    this.lcm = lcmSet;
   }
 
   inspectItems(
@@ -42,22 +73,21 @@ class Monkey {
     const rounds = this.inventory.length;
     for (let i = 0; i < rounds; i += 1) {
       let item = this.inventory.shift();
-      console.log('current item', item);
 
-      item = Math.floor(this.operation(item) / 3);
-      console.log('new Worry level', item);
+      item = (this.lcm)
+        ? this.operation(item) % this.lcm
+        : Math.floor(this.operation(item) / 3);
       if (!item) {
         return;
       }
 
+      this.increaseInspectionCount();
+
       const testPasses = item % this.divisibleBy === 0;
-      console.log('The test function: ', testPasses, '');
 
       if (testPasses) {
-        console.log(`sending ${item} to monkey ${this.bored.true}`);
         monkeys[this.bored.true].receiveItem(item);
       } else {
-        console.log(`sending ${item} to monkey ${this.bored.false}`);
         monkeys[this.bored.false].receiveItem(item);
       }
     }
@@ -66,11 +96,14 @@ class Monkey {
 
 const outputInventory = (monkeys: Monkey[]) => {
   monkeys.forEach((monkey, index) => {
-    console.log(`Monkey ${index} has ${monkey.inventory}`);
+    console.log(`Monkey ${index} inspected ${monkey.inspectionCount}`);
   });
 };
 
-const dayElevenPartOne = () => {
+const dayEleven = (
+  useLcm = false,
+  rounds = 10000,
+) => {
   const input = syncReadFile(path.join(__dirname, 'input.txt'));
 
   const monkeyInstructions: string[][] = [[]];
@@ -89,12 +122,9 @@ const dayElevenPartOne = () => {
   // need to check every item the monkey has, one at a time
   // after the monkey inspects the item worry level is divided by 3 and rounded down.
 
-  const maxRounds = 1;
   // const worryLevel = 0;
 
   const monkeyArray: Monkey[] = [];
-
-  // console.log(input);
 
   monkeyInstructions.forEach((mInstructions) => {
     const itemArray = mInstructions[1].split(':')[1].split(',').map((item) => +item.trim());
@@ -114,7 +144,12 @@ const dayElevenPartOne = () => {
     ));
   });
 
-  for (let i = 0; i < maxRounds; i += 1) {
+  if (useLcm) {
+    const lcmSet = lcmArray(monkeyArray.map((monkey) => monkey.divisibleBy));
+    monkeyArray.forEach((monkey) => monkey.setLcm(lcmSet));
+  }
+
+  for (let i = 0; i < rounds; i += 1) {
     monkeyArray.forEach((monkey) => {
       monkey.inspectItems(monkeyArray);
     });
@@ -136,19 +171,17 @@ const dayElevenPartOne = () => {
    *
    */
 
-  return input;
-};
+  const activeMonkeys = monkeyArray
+    .sort((a, b) => b.inspectionCount - a.inspectionCount)
+    .map((monkey) => monkey.inspectionCount);
 
-const dayElevenPartTwo = () => {
-  const input = syncReadFile(path.join(__dirname, 'input.txt'));
-
-  return input;
+  // console.log(activeMonkeys.map((monkey) => monkey.inspectionCount));
+  return activeMonkeys[0] * activeMonkeys[1];
 };
 
 // stop if you reach an edge
 // stop if you reach a tree the same height or taller
 
 export {
-  dayElevenPartOne,
-  dayElevenPartTwo,
+  dayEleven,
 };
