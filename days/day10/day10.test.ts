@@ -1,7 +1,7 @@
-import { dayEightPartOne } from './day10';
+import { dayTenPartOne } from './day10';
 
 describe('Day Ten tests', () => {
   test('Part one', () => {
-    expect(dayEightPartOne()).toBe(21);
+    expect(dayTenPartOne()).toBe(13140);
   });
 });
