@@ -41,7 +41,7 @@ const findItem = (
     weight: 0,
   };
 };
-const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const characters = 'abcdefghijklmnopqrstuvwxyzE'.split('');
 
 const checkNode = (
   priorNode: Node,
@@ -74,7 +74,6 @@ const checkNode = (
   ) {
     return {
       valid: false,
-      end: false,
       canMove: false,
       key: '',
     };
@@ -85,7 +84,7 @@ const checkNode = (
 
   // if index of currentElement is - 1 of searchedLocation or lower
 
-  const validElevation = characters.indexOf(searchedLocation) - characters.indexOf(currentElement) <= 1;
+  const validMove = characters.indexOf(searchedLocation) - characters.indexOf(currentElement) <= 1;
 
   const node: Node = {
     x: searchX,
@@ -95,8 +94,7 @@ const checkNode = (
   };
   return {
     valid: true,
-    end: searchedLocation === 'E',
-    canMove: searchedLocation === 'E' || validElevation,
+    canMove: validMove,
     node,
   };
 };
@@ -125,59 +123,43 @@ const findPaths = (
 
   return possiblePaths.sort((a, b) => a.weight - b.weight);
 };
+
 const dayTwelve = () => {
   const input = syncReadFile(path.join(__dirname, 'input.txt'))
     .map((line) => line.split(''));
 
-  // const visited = new Set<string>();
-  // let finalStep: string = '';
-  // input.forEach((line, index) => line.forEach((char, charIndex) => {
-  //   if (char === 'E') {
-  //     finalStep = `${charIndex},${index}`;
-  //   }
-  // }));
-
-  const stack = [];
   const traversed = new Set<string>();
   const weights: number[] = [];
 
   const current = findItem(input, 'S');
-  // const startCoords = findItem(input, 'S');
+  const queue = [current];
   const endCoords = findItem(input, 'E');
 
   // const shortestPath = 0;
 
-  stack.push(current);
-
-  while (stack.length > 0) {
-    const currentNode = stack.pop();
+  while (queue.length > 0) {
+    // need to start from the front because these should have the lowest weight
+    const currentNode = queue.shift();
 
     if (!currentNode) {
       throw Error('Unable to find node');
     }
 
-    // console.log({
-    //   current: currentNode,
-    //   end: endCoords,
-    // });
-    if (currentNode.key === endCoords.key) {
-      weights.push(currentNode.weight);
+    if (
+      currentNode.x === endCoords.x
+      && currentNode.y === endCoords.y
+    ) {
+      return currentNode.weight;
     }
-
     const paths = findPaths(currentNode, input);
-
     paths.forEach((n) => {
       if (!traversed.has(n.key)) {
-        stack.push(n);
+        queue.push(n);
       }
     });
 
     traversed.add(currentNode.key);
   }
-
-  console.log({
-    weights,
-  });
 
   return weights.sort()[0];
 
