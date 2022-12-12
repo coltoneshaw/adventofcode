@@ -3,7 +3,7 @@ import { dayTwelve } from './day12';
 
 describe('Day Eleven tests', () => {
   test('Part one', () => {
-    expect(dayTwelve()).toBe(10605);
+    expect(dayTwelve()).toBe(31);
   });
 
   test('Part two', () => {
