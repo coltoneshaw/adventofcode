@@ -111,29 +111,39 @@ const dayTwelve = () => {
 
   const current: Node = findItem(input, 'S');
   // const queue: Node[] = [current];
-  const newQueue = new Set();
-  newQueue.add(current);
+  const newQueue = new Map<string, Node>();
+  newQueue.set(current.key, current);
+
   const endCoords: Node = findItem(input, 'E');
 
   const addToQueue = (node: Node) => {
     const alreadyVisited = traversed.has(node.key);
-    const inQueue = newQueue.has(node);
+    const inQueue = newQueue.has(node.key);
+    // console.log({
+    //   alreadyVisited,
+    //   inQueue,
+    //   node,
+    // });
+
+    // console.log({
+    //   newQueue,
+    //   node,
+    // });
     if (!alreadyVisited && !inQueue) {
-      newQueue.add(node);
+      newQueue.set(node.key, node);
     }
   };
 
   while (newQueue.size > 0) {
     // need to start from the front because these should have the lowest weight
     const currentNode = newQueue.values().next().value;
-    newQueue.delete(currentNode);
 
     if (!currentNode) {
       throw Error('Unable to find node');
     }
-    traversed.add(currentNode.key);
 
     if (currentNode.key === endCoords.key) {
+      console.log('Found end node', currentNode);
       return currentNode.weight;
     }
     const paths = findPaths(currentNode, input);
@@ -141,6 +151,8 @@ const dayTwelve = () => {
     if (paths.length !== 0) {
       paths.forEach((n) => addToQueue(n));
     }
+    traversed.add(currentNode.key);
+    newQueue.delete(currentNode.key);
   }
 
   return undefined;
