@@ -100,7 +100,7 @@ const findPaths = (
   const right = checkNode(currentLocation, inputArray, 'right');
   if (right.canMove) possiblePaths.push(right.node as Node);
 
-  return possiblePaths;
+  return possiblePaths.sort((a, b) => a.weight - b.weight);
 };
 
 const dayTwelve = () => {
@@ -110,27 +110,23 @@ const dayTwelve = () => {
   const traversed = new Set<string>();
 
   const current: Node = findItem(input, 'S');
-  const queue: Node[] = [current];
+  // const queue: Node[] = [current];
+  const newQueue = new Set();
+  newQueue.add(current);
   const endCoords: Node = findItem(input, 'E');
 
   const addToQueue = (node: Node) => {
     const alreadyVisited = traversed.has(node.key);
-    const inQueue = queue.find((q) => q.key === node.key);
-
-    // console.log({
-    //   node,
-    //   alreadyVisited,
-    //   inQueue,
-    // });
-
+    const inQueue = newQueue.has(node);
     if (!alreadyVisited && !inQueue) {
-      queue.push(node);
+      newQueue.add(node);
     }
   };
 
-  while (queue.length > 0) {
+  while (newQueue.size > 0) {
     // need to start from the front because these should have the lowest weight
-    const currentNode = queue.shift();
+    const currentNode = newQueue.values().next().value;
+    newQueue.delete(currentNode);
 
     if (!currentNode) {
       throw Error('Unable to find node');
